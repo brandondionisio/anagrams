@@ -10,12 +10,15 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 DICTIONARY_FILEPATH = os.getenv("DICTIONARY_FILEPATH")
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+dictionary_path = os.path.join(current_dir, DICTIONARY_FILEPATH)
+
 bot = commands.Bot(command_prefix="*", intents=discord.Intents.all())
 bot.remove_command('help')
 
 valid_6 = set()
 valid_7 = set()
-with open(DICTIONARY_FILEPATH, 'r') as f:
+with open(dictionary_path, 'r') as f:
     for line in f:
         word = line.strip().lower()
         if len(word) == 6:
@@ -59,7 +62,7 @@ def contains_same_letters(word1, word2):
     return True
 
 def valid_word(word):
-    with open(DICTIONARY_FILEPATH, 'r') as f:
+    with open(dictionary_path, 'r') as f:
         for line in f:
             if word in line.lower():
                 return True
@@ -69,7 +72,7 @@ async def anagram_run(ctx, word):
     scramble = "".join(random.sample(word, len(word)))
     user = ctx.author
     anagrams = set()
-    with open(DICTIONARY_FILEPATH, 'r') as f:
+    with open(dictionary_path, 'r') as f:
         for line in f:
             word_check = line.strip().lower()
             if contains_same_letters(word, word_check) and len(word_check) >= 3:
