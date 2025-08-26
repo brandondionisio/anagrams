@@ -84,7 +84,10 @@ def valid_word(word):
 
 def create_anagrams_table(words_list, title):
     if not words_list:
-        return f"**{title}**\nNo words to display."
+        if title:
+            return f"**{title}**\nNo words to display."
+        else:
+            return "No words to display."
     
     table = "```\n"
     table += f"{'Length':<6} {'Count':<6} {'Words':<50}\n"
@@ -120,7 +123,10 @@ def create_anagrams_table(words_list, title):
                 table += f"{length:<6} {len(words_of_length):<6} {words_str:<50}\n"
     
     table += "```"
-    return f"**{title}**\n{table}"
+    if title:
+        return f"**{title}**\n{table}"
+    else:
+        return table
 
 async def anagram_run(ctx, word):
     scramble = "".join(random.sample(word, len(word)))
@@ -152,7 +158,7 @@ async def anagram_run(ctx, word):
         if len(anagrams) == 0:
             break
         msg = await bot.wait_for('message', check=lambda m: m.author == user)
-        if msg.content == 'quit':
+        if msg.content == '*quit':
             await ctx.send("Exiting")
             break
         elif msg.content.lower() in anagrams:
@@ -191,7 +197,7 @@ async def anagram_run(ctx, word):
     await ctx.send(f"**✅ You found {completed_count} anagram{'s' if completed_count != 1 else ''}:**")
     
     if completed_count > 0:
-        completed_table = create_anagrams_table(sorted_completed, "")
+        completed_table = create_anagrams_table(sorted_completed, None)
         await ctx.send(completed_table)
     
     if len(sorted_anagrams) == 0:
