@@ -198,26 +198,26 @@ async def anagram_run(ctx, word):
         await ctx.send("**You got every anagram! I'm so proud of you!**")
     else:
         missed_count = len(sorted_anagrams)
-        await ctx.send(f"**❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}:**")
-        
-        missed_table = create_anagrams_table(sorted_anagrams, f"**❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}:**")
+        missed_table = create_anagrams_table(sorted_anagrams, f"❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}")
         await ctx.send(missed_table)
     
 async def timer(ctx, timer_expired):
     await bot.wait_until_ready()
+
+    await asyncio.sleep(30)
     
     if ctx.channel.id in current_game_info:
         current_game_info[ctx.channel.id]['time_left'] = 30
-        await ctx.send("⏰ **30 seconds remaining!**")
+        await ctx.send("**⏰ 30 seconds remaining!**")
     
     await asyncio.sleep(20)
     
     if ctx.channel.id in current_game_info:
         current_game_info[ctx.channel.id]['time_left'] = 10
-        await ctx.send("⏰ **10 seconds remaining!**")
+        await ctx.send("**⏰ 10 seconds remaining!**")
     
     await asyncio.sleep(10)
-    await ctx.send("⏰ **Time's up!**")
+    await ctx.send("**Time's up!**")
     timer_expired[0] = True
     
     if ctx.channel.id in current_game_info:
