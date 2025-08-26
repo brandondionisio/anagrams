@@ -37,7 +37,20 @@ async def help(ctx):
     embed.add_field(name="*anagrams 6", value="Plays anagrams with a random 6-letter word", inline=False)
     embed.add_field(name="*anagrams 7", value="Plays anagrams with a random 7-letter word", inline=False)
     embed.add_field(name="*anagrams <word>", value="Plays anagrams with a given word", inline=False)
+    embed.add_field(name="*letters", value="Shows the current game's original letters", inline=False)
     await ctx.send(embed=embed)
+
+@bot.command()
+async def letters(ctx):
+    if ctx.channel.id in current_game_info:
+        info = current_game_info[ctx.channel.id]
+        await ctx.send(f"🎯 **Current Game Info:**\n"
+                       f"**Scrambled:** `{info['scrambled']}`\n"
+                       f"**Time remaining:** {info['time_left']} seconds")
+    else:
+        await ctx.send("No active game in this channel. Start one with `*anagrams`!")
+
+current_game_info = {}
 
 @bot.command()
 async def anagrams(ctx, word=None):
@@ -80,7 +93,26 @@ async def anagram_run(ctx, word):
                 anagrams.add(word_check)
     
     completed_anagrams = set()
-    await ctx.send("You have 60 seconds to type in anagrams for " + scramble + ". Go!")
+    # Send the game start message with original letters prominently displayed
+    game_start_msg = await ctx.send(f"🎯 **ANAGRAMS GAME STARTED!** 🎯\n"
+                                   f"**Original word:** `{word}`\n"
+                                   f"**Scrambled:** `{scramble}`\n"
+                                   f"**Time:** 60 seconds\n\n"
+                                   f"**Type your anagrams now!**")
+    
+    # Store game info for the letters command
+    current_game_info[ctx.channel.id] = {
+        'original': word,
+        'scrambled': scramble,
+        'time_left': 60
+    }
+    
+    # Pin this message so it stays visible
+    try:
+        await game_start_msg.pin()
+    except:
+        # If pinning fails (no permissions), just continue
+        pass
     points = 0
 
     timer_expired = [False]
@@ -209,12 +241,22 @@ async def anagram_run(ctx, word):
     
 async def timer(ctx, timer_expired):
     await bot.wait_until_ready()
-    await asyncio.sleep(30)
-    await ctx.send("30 seconds remaining!")
+    
+    if ctx.channel.id in current_game_info:
+        current_game_info[ctx.channel.id]['time_left'] = 30
+        await ctx.send("⏰ **30 seconds remaining!**")
+    
     await asyncio.sleep(20)
-    await ctx.send("10 seconds remaining!")
+    
+    if ctx.channel.id in current_game_info:
+        current_game_info[ctx.channel.id]['time_left'] = 10
+        await ctx.send("⏰ **10 seconds remaining!**")
+    
     await asyncio.sleep(10)
-    await ctx.send("Time's up!")
+    await ctx.send("⏰ **Time's up!**")
     timer_expired[0] = True
+    
+    if ctx.channel.id in current_game_info:
+        del current_game_info[ctx.channel.id]
 
 bot.run(TOKEN)
