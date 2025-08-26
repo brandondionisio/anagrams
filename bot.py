@@ -82,6 +82,46 @@ def valid_word(word):
                 return True
     return False
 
+def create_anagrams_table(words_list, title):
+    if not words_list:
+        return f"**{title}**\nNo words to display."
+    
+    table = "```\n"
+    table += f"{'Length':<6} {'Count':<6} {'Words':<50}\n"
+    table += "-" * 62 + "\n"
+    
+    for length in range(max(len(word) for word in words_list), 2, -1):
+        words_of_length = [word for word in words_list if len(word) == length]
+        if words_of_length:
+            words_str = ', '.join(words_of_length)
+            if len(words_str) > 50:
+                words_list_split = words_of_length
+                chunks = []
+                current_chunk = []
+                current_length = 0
+                
+                for word in words_list_split:
+                    if current_length + len(word) + 2 <= 50:
+                        current_chunk.append(word)
+                        current_length += len(word) + 2
+                    else:
+                        if current_chunk:
+                            chunks.append(', '.join(current_chunk))
+                        current_chunk = [word]
+                        current_length = len(word)
+                
+                if current_chunk:
+                    chunks.append(', '.join(current_chunk))
+                
+                table += f"{length:<6} {len(words_of_length):<6} {chunks[0]:<50}\n"
+                for chunk in chunks[1:]:
+                    table += f"{'':<6} {'':<6} {chunk:<50}\n"
+            else:
+                table += f"{length:<6} {len(words_of_length):<6} {words_str:<50}\n"
+    
+    table += "```"
+    return f"**{title}**\n{table}"
+
 async def anagram_run(ctx, word):
     scramble = "".join(random.sample(word, len(word)))
     user = ctx.author
@@ -93,26 +133,16 @@ async def anagram_run(ctx, word):
                 anagrams.add(word_check)
     
     completed_anagrams = set()
-    # Send the game start message with original letters prominently displayed
-    game_start_msg = await ctx.send(f"🎯 **ANAGRAMS GAME STARTED!** 🎯\n"
-                                   f"**Original word:** `{word}`\n"
-                                   f"**Scrambled:** `{scramble}`\n"
-                                   f"**Time:** 60 seconds\n\n"
-                                   f"**Type your anagrams now!**")
+
+    await ctx.send(f"🎯 **ANAGRAMS GAME STARTED!** 🎯\n"
+                   f"**Scrambled:** `{scramble}`\n"
+                   f"**Time:** 60 seconds\n\n"
+                   f"**Type your anagrams now!**")
     
-    # Store game info for the letters command
     current_game_info[ctx.channel.id] = {
-        'original': word,
         'scrambled': scramble,
         'time_left': 60
     }
-    
-    # Pin this message so it stays visible
-    try:
-        await game_start_msg.pin()
-    except:
-        # If pinning fails (no permissions), just continue
-        pass
     points = 0
 
     timer_expired = [False]
@@ -161,83 +191,17 @@ async def anagram_run(ctx, word):
     await ctx.send(f"**✅ You found {completed_count} anagram{'s' if completed_count != 1 else ''}:**")
     
     if completed_count > 0:
-        table = "```\n"
-        table += f"{'Length':<6} {'Count':<6} {'Words':<50}\n"
-        table += "-" * 62 + "\n"
-        
-        for length in range(max(len(word) for word in sorted_completed), 2, -1):
-            words_of_length = [word for word in sorted_completed if len(word) == length]
-            if words_of_length:
-                words_str = ', '.join(words_of_length)
-                if len(words_str) > 50:
-                    words_list = words_of_length
-                    chunks = []
-                    current_chunk = []
-                    current_length = 0
-                    
-                    for word in words_list:
-                        if current_length + len(word) + 2 <= 50:
-                            current_chunk.append(word)
-                            current_length += len(word) + 2
-                        else:
-                            if current_chunk:
-                                chunks.append(', '.join(current_chunk))
-                            current_chunk = [word]
-                            current_length = len(word)
-                    
-                    if current_chunk:
-                        chunks.append(', '.join(current_chunk))
-                    
-                    table += f"{length:<6} {len(words_of_length):<6} {chunks[0]:<50}\n"
-                    for chunk in chunks[1:]:
-                        table += f"{'':<6} {'':<6} {chunk:<50}\n"
-                else:
-                    table += f"{length:<6} {len(words_of_length):<6} {words_str:<50}\n"
-        
-        table += "```"
-        await ctx.send(table)
+        completed_table = create_anagrams_table(sorted_completed, "")
+        await ctx.send(completed_table)
     
     if len(sorted_anagrams) == 0:
-        await ctx.send("🎉 **You got every anagram! I'm so proud of you!** 🎉")
+        await ctx.send("**You got every anagram! I'm so proud of you!**")
     else:
         missed_count = len(sorted_anagrams)
         await ctx.send(f"**❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}:**")
         
-        table = "```\n"
-        table += f"{'Length':<6} {'Count':<6} {'Words':<50}\n"
-        table += "-" * 62 + "\n"
-        
-        for length in range(max(len(word) for word in sorted_anagrams), 2, -1):
-            words_of_length = [word for word in sorted_anagrams if len(word) == length]
-            if words_of_length:
-                words_str = ', '.join(words_of_length)
-                if len(words_str) > 50:
-                    words_list = words_of_length
-                    chunks = []
-                    current_chunk = []
-                    current_length = 0
-                    
-                    for word in words_list:
-                        if current_length + len(word) + 2 <= 50:
-                            current_chunk.append(word)
-                            current_length += len(word) + 2
-                        else:
-                            if current_chunk:
-                                chunks.append(', '.join(current_chunk))
-                            current_chunk = [word]
-                            current_length = len(word)
-                    
-                    if current_chunk:
-                        chunks.append(', '.join(current_chunk))
-                    
-                    table += f"{length:<6} {len(words_of_length):<6} {chunks[0]:<50}\n"
-                    for chunk in chunks[1:]:
-                        table += f"{'':<6} {'':<6} {chunk:<50}\n"
-                else:
-                    table += f"{length:<6} {len(words_of_length):<6} {words_str:<50}\n"
-        
-        table += "```"
-        await ctx.send(table)
+        missed_table = create_anagrams_table(sorted_anagrams, f"**❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}:**")
+        await ctx.send(missed_table)
     
 async def timer(ctx, timer_expired):
     await bot.wait_until_ready()
