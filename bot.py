@@ -122,18 +122,55 @@ async def anagram_run(ctx, word):
     timer_task.cancel()
     sorted_anagrams = sorted(anagrams, key=lambda x: (-len(x), x))
     sorted_completed = sorted(completed_anagrams, key=lambda x: (-len(x), x))
-    await ctx.send("Total points: " + str(points))
-    await ctx.send("Your anagrams:")
-    chunks = [str(sorted_completed)[i:i+2000] for i in range(0, len(str(sorted_completed)), 2000)]
-    for chunk in chunks:
-        await ctx.send(chunk)
+    
+    await ctx.send(f"**Total points: {points:,}**")
+    
+    # Display completed anagrams in table format
+    completed_count = len(sorted_completed)
+    await ctx.send(f"**✅ You found {completed_count} anagram{'s' if completed_count != 1 else ''}:**")
+    
+    if completed_count > 0:
+        # Create table header
+        table = "```\n"
+        table += f"{'Length':<6} {'Count':<6} {'Words':<50}\n"
+        table += "-" * 62 + "\n"
+        
+        # Group by word length and add to table
+        for length in range(max(len(word) for word in sorted_completed), 2, -1):
+            words_of_length = [word for word in sorted_completed if len(word) == length]
+            if words_of_length:
+                # Truncate words if they're too long for the column
+                words_str = ', '.join(words_of_length)
+                if len(words_str) > 50:
+                    words_str = words_str[:47] + "..."
+                table += f"{length:<6} {len(words_of_length):<6} {words_str:<50}\n"
+        
+        table += "```"
+        await ctx.send(table)
+    
     if len(sorted_anagrams) == 0:
-        await ctx.send("You got every anagram, I'm so proud of you.")
+        await ctx.send("🎉 **You got every anagram! I'm so proud of you!** 🎉")
     else:
-        await ctx.send("You missed:")
-        chunks = [str(sorted_anagrams)[i:i+2000] for i in range(0, len(str(sorted_anagrams)), 2000)]
-        for chunk in chunks:
-            await ctx.send(chunk)
+        missed_count = len(sorted_anagrams)
+        await ctx.send(f"**❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}:**")
+        
+        # Create table for missed words
+        table = "```\n"
+        table += f"{'Length':<6} {'Count':<6} {'Words':<50}\n"
+        table += "-" * 62 + "\n"
+        
+        # Group missed words by length and add to table
+        for length in range(max(len(word) for word in sorted_anagrams), 2, -1):
+            words_of_length = [word for word in sorted_anagrams if len(word) == length]
+            if words_of_length:
+                # Truncate words if they're too long for the column
+                words_str = ', '.join(words_of_length)
+                if len(words_str) > 50:
+                    words_str = words_str[:47] + "..."
+                table += f"{length:<6} {len(words_of_length):<6} {words_str:<50}\n"
+        
+        table += "```"
+        await ctx.send(table)
     
 async def timer(ctx, timer_expired):
     await bot.wait_until_ready()
