@@ -32,7 +32,7 @@ async def on_ready():
 
 @bot.command()
 async def help(ctx):
-    embed = discord.Embed(title="Help", description="I am Bananagrams!", color=0xFFE135)
+    embed = discord.Embed(title="Help", description="I am Anagrams!", color=0xFFE135)
     embed.add_field(name= "", value="List of commands:")
     embed.add_field(name="*anagrams 6", value="Plays anagrams with a random 6-letter word", inline=False)
     embed.add_field(name="*anagrams 7", value="Plays anagrams with a random 7-letter word", inline=False)
@@ -62,9 +62,10 @@ def contains_same_letters(word1, word2):
     return True
 
 def valid_word(word):
+    word_lower = word.lower()
     with open(dictionary_path, 'r') as f:
         for line in f:
-            if word in line.lower():
+            if word_lower == line.strip().lower():
                 return True
     return False
 
@@ -92,7 +93,7 @@ async def anagram_run(ctx, word):
         if msg.content == 'quit':
             await ctx.send("Exiting")
             break
-        elif msg.content in anagrams:
+        elif msg.content.lower() in anagrams:
             if len(msg.content) == 3:
                 points += 100
                 await ctx.send("+ 100")
@@ -109,9 +110,9 @@ async def anagram_run(ctx, word):
                 points += (len(msg.content) - 6) * 1000 + 2000
                 await ctx.send("+ " + str((len(msg.content) - 6) * 1000 + 2000))
             #await msg.add_reaction('👍')
-            anagrams.remove(msg.content)
-            completed_anagrams.add(msg.content)
-        elif msg.content in completed_anagrams:
+            anagrams.remove(msg.content.lower())
+            completed_anagrams.add(msg.content.lower())
+        elif msg.content.lower() in completed_anagrams:
             await ctx.send(msg.content + " (Already used)")
         elif len(msg.content) < 3:
             await ctx.send("(Words must be at least 3 letters long)")
