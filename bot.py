@@ -127,7 +127,7 @@ async def anagram_run(ctx, word):
     for chunk in chunks:
         await ctx.send(chunk)
     if len(sorted_anagrams) == 0:
-        await ctx.send("You got every anagram, I'm so proud of youwu")
+        await ctx.send("You got every anagram, I'm so proud of you.")
     else:
         await ctx.send("You missed:")
         chunks = [str(sorted_anagrams)[i:i+2000] for i in range(0, len(str(sorted_anagrams)), 2000)]
