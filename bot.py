@@ -125,25 +125,42 @@ async def anagram_run(ctx, word):
     
     await ctx.send(f"**Total points: {points:,}**")
     
-    # Display completed anagrams in table format
     completed_count = len(sorted_completed)
     await ctx.send(f"**✅ You found {completed_count} anagram{'s' if completed_count != 1 else ''}:**")
     
     if completed_count > 0:
-        # Create table header
         table = "```\n"
         table += f"{'Length':<6} {'Count':<6} {'Words':<50}\n"
         table += "-" * 62 + "\n"
         
-        # Group by word length and add to table
         for length in range(max(len(word) for word in sorted_completed), 2, -1):
             words_of_length = [word for word in sorted_completed if len(word) == length]
             if words_of_length:
-                # Truncate words if they're too long for the column
                 words_str = ', '.join(words_of_length)
                 if len(words_str) > 50:
-                    words_str = words_str[:47] + "..."
-                table += f"{length:<6} {len(words_of_length):<6} {words_str:<50}\n"
+                    words_list = words_of_length
+                    chunks = []
+                    current_chunk = []
+                    current_length = 0
+                    
+                    for word in words_list:
+                        if current_length + len(word) + 2 <= 50:
+                            current_chunk.append(word)
+                            current_length += len(word) + 2
+                        else:
+                            if current_chunk:
+                                chunks.append(', '.join(current_chunk))
+                            current_chunk = [word]
+                            current_length = len(word)
+                    
+                    if current_chunk:
+                        chunks.append(', '.join(current_chunk))
+                    
+                    table += f"{length:<6} {len(words_of_length):<6} {chunks[0]:<50}\n"
+                    for chunk in chunks[1:]:
+                        table += f"{'':<6} {'':<6} {chunk:<50}\n"
+                else:
+                    table += f"{length:<6} {len(words_of_length):<6} {words_str:<50}\n"
         
         table += "```"
         await ctx.send(table)
@@ -154,20 +171,38 @@ async def anagram_run(ctx, word):
         missed_count = len(sorted_anagrams)
         await ctx.send(f"**❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}:**")
         
-        # Create table for missed words
         table = "```\n"
         table += f"{'Length':<6} {'Count':<6} {'Words':<50}\n"
         table += "-" * 62 + "\n"
         
-        # Group missed words by length and add to table
         for length in range(max(len(word) for word in sorted_anagrams), 2, -1):
             words_of_length = [word for word in sorted_anagrams if len(word) == length]
             if words_of_length:
-                # Truncate words if they're too long for the column
                 words_str = ', '.join(words_of_length)
                 if len(words_str) > 50:
-                    words_str = words_str[:47] + "..."
-                table += f"{length:<6} {len(words_of_length):<6} {words_str:<50}\n"
+                    words_list = words_of_length
+                    chunks = []
+                    current_chunk = []
+                    current_length = 0
+                    
+                    for word in words_list:
+                        if current_length + len(word) + 2 <= 50:
+                            current_chunk.append(word)
+                            current_length += len(word) + 2
+                        else:
+                            if current_chunk:
+                                chunks.append(', '.join(current_chunk))
+                            current_chunk = [word]
+                            current_length = len(word)
+                    
+                    if current_chunk:
+                        chunks.append(', '.join(current_chunk))
+                    
+                    table += f"{length:<6} {len(words_of_length):<6} {chunks[0]:<50}\n"
+                    for chunk in chunks[1:]:
+                        table += f"{'':<6} {'':<6} {chunk:<50}\n"
+                else:
+                    table += f"{length:<6} {len(words_of_length):<6} {words_str:<50}\n"
         
         table += "```"
         await ctx.send(table)
