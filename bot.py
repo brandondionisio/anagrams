@@ -65,7 +65,7 @@ async def anagrams(ctx, word=None):
     elif len(word) < 3:
         await ctx.send(word + " is too short! Please make your word 3 letters or more")
     else:
-        await anagram_run(ctx, word)
+        await anagram_run(ctx, word, custom_word=True)
 
 def contains_same_letters(word1, word2):
     for letter in word2:
@@ -128,8 +128,11 @@ def create_anagrams_table(words_list, title):
     else:
         return table
 
-async def anagram_run(ctx, word):
-    scramble = "".join(random.sample(word, len(word)))
+async def anagram_run(ctx, word, custom_word=False):
+    if custom_word:
+        scramble = word
+    else:
+        scramble = "".join(random.sample(word, len(word)))
     user = ctx.author
     anagrams = set()
     with open(dictionary_path, 'r') as f:
@@ -166,7 +169,7 @@ async def anagram_run(ctx, word):
         elif msg.content.lower() in anagrams:
             if len(msg.content) == 3:
                 points += 100
-                await msg.add_reaction(':heavy_plus_sign')
+                await msg.add_reaction(':heavy_plus_sign:')
                 await msg.add_reaction(':one:')
                 await msg.add_reaction(':zero:')
                 await msg.add_reaction(':zero:')
