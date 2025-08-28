@@ -161,10 +161,15 @@ async def anagram_run(ctx, word):
         if msg.content == '*quit':
             await ctx.send("Exiting")
             break
+        elif ' ' in msg.content:
+            continue
         elif msg.content.lower() in anagrams:
             if len(msg.content) == 3:
                 points += 100
-                await ctx.send("+ 100")
+                await msg.add_reaction(':heavy_plus_sign')
+                await msg.add_reaction(':one:')
+                await msg.add_reaction(':zero:')
+                await msg.add_reaction(':zero:')
             elif len(msg.content) == 4:
                 points += 400
                 await ctx.send("+ 400")
