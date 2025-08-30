@@ -38,6 +38,7 @@ async def help(ctx):
     embed.add_field(name="*anagrams 7", value="Plays anagrams with a random 7-letter word", inline=False)
     embed.add_field(name="*anagrams <word>", value="Plays anagrams with a given word", inline=False)
     embed.add_field(name="*letters", value="Shows the current game's original letters", inline=False)
+    embed.add_field(name="*quit", value="Quits the current game", inline=False)
     await ctx.send(embed=embed)
 
 @bot.command()
@@ -143,10 +144,13 @@ async def anagram_run(ctx, word, custom_word=False):
     
     completed_anagrams = set()
 
-    await ctx.send(f"🎯 **ANAGRAMS GAME STARTED!** 🎯\n"
-                   f"**Scrambled:** `{scramble}`\n"
-                   f"**Time:** 60 seconds\n\n"
-                   f"**Type your anagrams now!**")
+    embed = discord.Embed(
+        title="🎯 ANAGRAMS GAME STARTED! 🎯",
+        description=f"**Word:** `{scramble}`\n**Time:** 60 seconds\n\n**Type your anagrams now!**",
+        color=0x00ff00
+    )
+    embed.set_footer(text="Use *quit to exit early")
+    await ctx.send(embed=embed)
     
     current_game_info[ctx.channel.id] = {
         'scrambled': scramble,
@@ -169,10 +173,7 @@ async def anagram_run(ctx, word, custom_word=False):
         elif msg.content.lower() in anagrams:
             if len(msg.content) == 3:
                 points += 100
-                await msg.add_reaction('➕')
-                await msg.add_reaction('1️⃣')
-                await msg.add_reaction('0️⃣')
-                await msg.add_reaction('0️⃣')
+                await ctx.send("+ 100")
             elif len(msg.content) == 4:
                 points += 400
                 await ctx.send("+ 400")
@@ -199,21 +200,38 @@ async def anagram_run(ctx, word, custom_word=False):
     sorted_anagrams = sorted(anagrams, key=lambda x: (-len(x), x))
     sorted_completed = sorted(completed_anagrams, key=lambda x: (-len(x), x))
     
-    await ctx.send(f"**Total points: {points:,}**")
+    # Create results embed
+    results_embed = discord.Embed(
+        title="🏆 GAME RESULTS 🏆",
+        description=f"**Total points:** {points:,}",
+        color=0xffd700  # Gold color
+    )
     
     completed_count = len(sorted_completed)
-    await ctx.send(f"**✅ You found {completed_count} anagram{'s' if completed_count != 1 else ''}:**")
-    
     if completed_count > 0:
         completed_table = create_anagrams_table(sorted_completed, None)
-        await ctx.send(completed_table)
+        results_embed.add_field(
+            name=f"✅ You found {completed_count} anagram{'s' if completed_count != 1 else ''}",
+            value=completed_table,
+            inline=False
+        )
     
     if len(sorted_anagrams) == 0:
-        await ctx.send("**You got every anagram! I'm so proud of you!**")
+        results_embed.add_field(
+            name="🎉 Perfect Score! 🎉",
+            value="You got every anagram! I'm so proud of you!",
+            inline=False
+        )
     else:
         missed_count = len(sorted_anagrams)
-        missed_table = create_anagrams_table(sorted_anagrams, f"❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}")
-        await ctx.send(missed_table)
+        missed_table = create_anagrams_table(sorted_anagrams, None)
+        results_embed.add_field(
+            name=f"❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}",
+            value=missed_table,
+            inline=False
+        )
+    
+    await ctx.send(embed=results_embed)
     
 async def timer(ctx, timer_expired):
     await bot.wait_until_ready()
