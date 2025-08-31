@@ -209,7 +209,7 @@ async def anagram_run(ctx, word, custom_word=False):
                 )
         else:
             results_embed.add_field(
-                name=f"**You found {completed_count} anagrams{'s' if completed_count != 1 else ''}**",
+                name=f"**You found {completed_count} anagram{'s' if completed_count != 1 else ''}**",
                 value="",
                 inline=False
             )
