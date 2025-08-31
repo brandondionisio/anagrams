@@ -83,51 +83,47 @@ def valid_word(word):
                 return True
     return False
 
-def create_anagrams_table(words_list, title):
+def create_anagrams_list(words_list, title):
+    """Create a formatted list for displaying anagrams"""
     if not words_list:
         if title:
             return f"**{title}**\nNo words to display."
         else:
             return "No words to display."
     
-    table = "```\n"
-    table += f"{'Length':<6} {'Count':<6} {'Words':<50}\n"
-    table += "-" * 62 + "\n"
+    # Group words by length
+    result = ""
+    if title:
+        result += f"**{title}**\n"
     
     for length in range(max(len(word) for word in words_list), 2, -1):
         words_of_length = [word for word in words_list if len(word) == length]
         if words_of_length:
-            words_str = ', '.join(words_of_length)
-            if len(words_str) > 50:
-                words_list_split = words_of_length
-                chunks = []
-                current_chunk = []
-                current_length = 0
-                
-                for word in words_list_split:
-                    if current_length + len(word) + 2 <= 50:
-                        current_chunk.append(word)
-                        current_length += len(word) + 2
-                    else:
-                        if current_chunk:
-                            chunks.append(', '.join(current_chunk))
-                        current_chunk = [word]
-                        current_length = len(word)
-                
-                if current_chunk:
-                    chunks.append(', '.join(current_chunk))
-                
-                table += f"{length:<6} {len(words_of_length):<6} {chunks[0]:<50}\n"
-                for chunk in chunks[1:]:
-                    table += f"{'':<6} {'':<6} {chunk:<50}\n"
+            # Create a clean list format
+            if length == 6:
+                result += f"**🔵 {length}-letter words ({len(words_of_length)}):**\n"
+            elif length == 5:
+                result += f"**🟢 {length}-letter words ({len(words_of_length)}):**\n"
+            elif length == 4:
+                result += f"**🟡 {length}-letter words ({len(words_of_length)}):**\n"
             else:
-                table += f"{length:<6} {len(words_of_length):<6} {words_str:<50}\n"
+                result += f"**🟠 {length}-letter words ({len(words_of_length)}):**\n"
+            
+            # Split into chunks to avoid Discord's message length limit
+            words_str = ', '.join(words_of_length)
+            if len(words_str) > 100:  # Discord limit is ~2000 chars
+                # Split into smaller chunks
+                chunks = [words_str[i:i+100] for i in range(0, len(words_str), 100)]
+                for i, chunk in enumerate(chunks):
+                    if i == 0:
+                        result += f"`{chunk}`\n"
+                    else:
+                        result += f"`{chunk}`\n"
+            else:
+                result += f"`{words_str}`\n"
+            result += "\n"
     
-    table += "```"
-    if title:
-        return f"**{title}**\n{table}"
-    else:
-        return table
+    return result
 
 async def anagram_run(ctx, word, custom_word=False):
     if custom_word:
@@ -209,10 +205,10 @@ async def anagram_run(ctx, word, custom_word=False):
     
     completed_count = len(sorted_completed)
     if completed_count > 0:
-        completed_table = create_anagrams_table(sorted_completed, None)
+        completed_list = create_anagrams_list(sorted_completed, None)
         results_embed.add_field(
             name=f"✅ You found {completed_count} anagram{'s' if completed_count != 1 else ''}",
-            value=completed_table,
+            value=completed_list,
             inline=False
         )
     
@@ -224,10 +220,10 @@ async def anagram_run(ctx, word, custom_word=False):
         )
     else:
         missed_count = len(sorted_anagrams)
-        missed_table = create_anagrams_table(sorted_anagrams, None)
+        missed_list = create_anagrams_list(sorted_anagrams, None)
         results_embed.add_field(
             name=f"❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}",
-            value=missed_table,
+            value=missed_list,
             inline=False
         )
     
