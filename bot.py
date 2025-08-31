@@ -91,7 +91,6 @@ def create_anagrams_list(words_list, title):
         else:
             return "No words to display."
     
-    # Group words by length
     result = ""
     if title:
         result += f"**{title}**\n"
@@ -99,7 +98,6 @@ def create_anagrams_list(words_list, title):
     for length in range(max(len(word) for word in words_list), 2, -1):
         words_of_length = [word for word in words_list if len(word) == length]
         if words_of_length:
-            # Create a clean list format
             if length == 6:
                 result += f"**🔵 {length}-letter words ({len(words_of_length)}):**\n"
             elif length == 5:
@@ -109,19 +107,9 @@ def create_anagrams_list(words_list, title):
             else:
                 result += f"**🟠 {length}-letter words ({len(words_of_length)}):**\n"
             
-            # Split into chunks to avoid Discord's message length limit
-            words_str = ', '.join(words_of_length)
-            if len(words_str) > 100:  # Discord limit is ~2000 chars
-                # Split into smaller chunks
-                chunks = [words_str[i:i+100] for i in range(0, len(words_str), 100)]
-                for i, chunk in enumerate(chunks):
-                    if i == 0:
-                        result += f"`{chunk}`\n"
-                    else:
-                        result += f"`{chunk}`\n"
-            else:
-                result += f"`{words_str}`\n"
-            result += "\n"
+            result += ', '.join(words_of_length) + "\n"
+
+    print("result: ", result)
     
     return result
 
@@ -196,7 +184,6 @@ async def anagram_run(ctx, word, custom_word=False):
     sorted_anagrams = sorted(anagrams, key=lambda x: (-len(x), x))
     sorted_completed = sorted(completed_anagrams, key=lambda x: (-len(x), x))
     
-    # Create results embed
     results_embed = discord.Embed(
         title="🏆 GAME RESULTS 🏆",
         description=f"**Total points:** {points:,}",
@@ -206,20 +193,28 @@ async def anagram_run(ctx, word, custom_word=False):
     completed_count = len(sorted_completed)
     if completed_count > 0:
         completed_list = create_anagrams_list(sorted_completed, None)
-        # Split long lists into multiple fields if needed
+        print("completed list length: ", len(completed_list))
         if len(completed_list) > 1024:
-            # Split into chunks of 1000 characters
+            results_embed.add_field(
+                name=f"**✅ You found{completed_count} anagrams**",
+                value="",
+                inline=False
+            )
             chunks = [completed_list[i:i+1000] for i in range(0, len(completed_list), 1000)]
             for i, chunk in enumerate(chunks):
-                field_name = f"✅ Found Anagrams (Part {i+1})" if i > 0 else f"✅ You found {completed_count} anagram{'s' if completed_count != 1 else ''}"
                 results_embed.add_field(
-                    name=field_name,
+                    name="",
                     value=chunk,
                     inline=False
                 )
         else:
             results_embed.add_field(
-                name=f"✅ You found {completed_count} anagram{'s' if completed_count != 1 else ''}",
+                name=f"**✅ You found {completed_count} anagrams{'s' if completed_count != 1 else ''}**",
+                value="",
+                inline=False
+            )
+            results_embed.add_field(
+                name="",
                 value=completed_list,
                 inline=False
             )
@@ -233,20 +228,28 @@ async def anagram_run(ctx, word, custom_word=False):
     else:
         missed_count = len(sorted_anagrams)
         missed_list = create_anagrams_list(sorted_anagrams, None)
-        # Split long lists into multiple fields if needed
+        print("missed list length: ", len(missed_list))
         if len(missed_list) > 1024:
-            # Split into chunks of 1000 characters
+            results_embed.add_field(
+                name=f"**❌ You missed {missed_count} anagrams**",
+                value="",
+                inline=False
+            )
             chunks = [missed_list[i:i+1000] for i in range(0, len(missed_list), 1000)]
             for i, chunk in enumerate(chunks):
-                field_name = f"❌ Missed Anagrams (Part {i+1})" if i > 0 else f"❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}"
                 results_embed.add_field(
-                    name=field_name,
+                    name="",
                     value=chunk,
                     inline=False
                 )
         else:
             results_embed.add_field(
-                name=f"❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}",
+                name=f"**❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}**",
+                value="",
+                inline=False
+            )
+            results_embed.add_field(
+                name="",
                 value=missed_list,
                 inline=False
             )
