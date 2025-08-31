@@ -196,7 +196,7 @@ async def anagram_run(ctx, word, custom_word=False):
         print("completed list length: ", len(completed_list))
         if len(completed_list) > 1024:
             results_embed.add_field(
-                name=f"**✅ You found{completed_count} anagrams**",
+                name=f"**You found{completed_count} anagrams**",
                 value="",
                 inline=False
             )
@@ -209,7 +209,7 @@ async def anagram_run(ctx, word, custom_word=False):
                 )
         else:
             results_embed.add_field(
-                name=f"**✅ You found {completed_count} anagrams{'s' if completed_count != 1 else ''}**",
+                name=f"**You found {completed_count} anagrams{'s' if completed_count != 1 else ''}**",
                 value="",
                 inline=False
             )
@@ -231,7 +231,7 @@ async def anagram_run(ctx, word, custom_word=False):
         print("missed list length: ", len(missed_list))
         if len(missed_list) > 1024:
             results_embed.add_field(
-                name=f"**❌ You missed {missed_count} anagrams**",
+                name=f"**You missed {missed_count} anagrams**",
                 value="",
                 inline=False
             )
@@ -244,7 +244,7 @@ async def anagram_run(ctx, word, custom_word=False):
                 )
         else:
             results_embed.add_field(
-                name=f"**❌ You missed {missed_count} anagram{'s' if missed_count != 1 else ''}**",
+                name=f"**You missed {missed_count} anagram{'s' if missed_count != 1 else ''}**",
                 value="",
                 inline=False
             )
