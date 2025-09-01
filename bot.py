@@ -18,6 +18,10 @@ bot.remove_command('help')
 
 valid_6 = set()
 valid_7 = set()
+combos_6 = []
+combos_7 = []
+
+# Load regular word lists
 with open(dictionary_path, 'r') as f:
     for line in f:
         word = line.strip().lower()
@@ -26,6 +30,16 @@ with open(dictionary_path, 'r') as f:
         elif len(word) == 7:
             valid_7.add(word)
 
+# Load combo word lists
+combo_six_path = os.path.join(current_dir, "combosSix.txt")
+combo_seven_path = os.path.join(current_dir, "combosSeven.txt")
+
+with open(combo_six_path, 'r') as f:
+    combos_6 = [line.strip().lower() for line in f]
+
+with open(combo_seven_path, 'r') as f:
+    combos_7 = [line.strip().lower() for line in f]
+
 @bot.event
 async def on_ready():
     print('Bananagrams is now online!')
@@ -33,10 +47,13 @@ async def on_ready():
 @bot.command()
 async def help(ctx):
     embed = discord.Embed(title="Help", description="I am Anagrams!", color=0xFFE135)
-    embed.add_field(name= "", value="List of commands:")
-    embed.add_field(name="*anagrams 6", value="Plays anagrams with a random 6-letter word", inline=False)
-    embed.add_field(name="*anagrams 7", value="Plays anagrams with a random 7-letter word", inline=False)
-    embed.add_field(name="*anagrams <word>", value="Plays anagrams with a given word", inline=False)
+    embed.add_field(name= "LIST OF COMMANDS:", value="", inline=False)
+    embed.add_field(name="*anagrams 6", value="Plays with a random 6-letter word", inline=False)
+    embed.add_field(name="*anagrams 7", value="Plays with a random 7-letter word", inline=False)
+    embed.add_field(name="*anagrams <word>", value="Plays with a given word", inline=False)
+    embed.add_field(name="*combo 6", value="Plays combo challenge with a 6-letter word set", inline=False)
+    embed.add_field(name="*combo 7", value="Plays combo challenge with a 7-letter word set", inline=False)
+    embed.add_field(name="*reveal <word>", value="Shows all possible anagrams for a word (without playing)", inline=False)
     embed.add_field(name="*letters", value="Shows the current game's original letters", inline=False)
     embed.add_field(name="*quit", value="Quits the current game", inline=False)
     await ctx.send(embed=embed)
@@ -50,6 +67,60 @@ async def letters(ctx):
                        f"**Time remaining:** {info['time_left']} seconds")
     else:
         await ctx.send("No active game in this channel. Start one with `*anagrams`!")
+
+@bot.command()
+async def reveal(ctx, word=None):
+    """Reveals all possible anagrams for a given word"""
+    if word is None:
+        await ctx.send("Please provide a word to reveal anagrams for. Usage: `*reveal <word>`")
+        return
+    
+    anagrams = set()
+    with open(dictionary_path, 'r') as f:
+        for line in f:
+            word_check = line.strip().lower()
+            if contains_same_letters(word, word_check) and len(word_check) >= 3:
+                anagrams.add(word_check)
+    
+    reveal_embed = discord.Embed(
+        title=f"🔍 Anagrams for `{word}`",
+        description=f"Found {len(anagrams)} possible anagrams",
+        color=0x9b59b6
+    )
+    
+    sorted_anagrams = sorted(anagrams, key=lambda x: (-len(x), x))
+    anagrams_list = create_anagrams_list(sorted_anagrams, None)
+    
+    if len(anagrams_list) > 1024:
+        chunks = [anagrams_list[i:i+1000] for i in range(0, len(anagrams_list), 1000)]
+        for i, chunk in enumerate(chunks):
+            reveal_embed.add_field(
+                name="" if i > 0 else "All possible anagrams:",
+                value=chunk,
+                inline=False
+            )
+    else:
+        reveal_embed.add_field(
+            name="All possible anagrams:",
+            value=anagrams_list if anagrams else "No anagrams found!",
+            inline=False
+        )
+    
+    await ctx.send(embed=reveal_embed)
+
+@bot.command()
+async def combo(ctx, length=None):
+    """Starts a combo anagram game with predefined word lists"""
+    if length not in ['6', '7']:
+        await ctx.send("Please specify either 6 or 7 for the word length. Usage: `*combo 6` or `*combo 7`")
+        return
+    
+    if length == '6':
+        word = random.choice(combos_6)
+    else:
+        word = random.choice(combos_7)
+    
+    await combo_run(ctx, word, int(length))
 
 current_game_info = {}
 
@@ -128,9 +199,12 @@ async def anagram_run(ctx, word, custom_word=False):
     
     completed_anagrams = set()
 
+    title = "🎯 ANAGRAMS GAME STARTED! 🎯"
+    description = f"**Word:** `{scramble}`\n**Time:** 60 seconds\n\n**Type your anagrams now!**"
+
     embed = discord.Embed(
-        title="🎯 ANAGRAMS GAME STARTED! 🎯",
-        description=f"**Word:** `{scramble}`\n**Time:** 60 seconds\n\n**Type your anagrams now!**",
+        title=title,
+        description=description,
         color=0x00ff00
     )
     embed.set_footer(text="Use *quit to exit early")
@@ -253,6 +327,87 @@ async def anagram_run(ctx, word, custom_word=False):
                 value=missed_list,
                 inline=False
             )
+    
+    await ctx.send(embed=results_embed)
+
+async def combo_run(ctx, word, length):
+    user = ctx.author
+    anagrams = set()
+    with open(dictionary_path, 'r') as f:
+        for line in f:
+            word_check = line.strip().lower()
+            if contains_same_letters(word, word_check) and len(word_check) == length:
+                anagrams.add(word_check)
+    
+    completed_anagrams = set()
+
+    title = "🎯 COMBO CHALLENGE STARTED! 🎯"
+    description = f"**Word:** `{word}`\n**Time:** 60 seconds\n\n**Type the combo now!**"
+
+    embed = discord.Embed(
+        title=title,
+        description=description,
+        color=0x00ff00
+    )
+    embed.set_footer(text="Use *quit to exit early")
+    await ctx.send(embed=embed)
+    
+    current_game_info[ctx.channel.id] = {
+        'word': word,
+        'time_left': 60
+    }
+
+    timer_expired = [False]
+    timer_task = bot.loop.create_task(timer(ctx, timer_expired))
+
+    while not timer_expired[0]:
+        if len(anagrams) == 0:
+            break
+        msg = await bot.wait_for('message', check=lambda m: m.author == user)
+        if msg.content == '*quit':
+            await ctx.send("Exiting")
+            break
+        elif ' ' in msg.content:
+            continue
+        elif msg.content.lower() in anagrams:
+            await msg.add_reaction('👍')
+            anagrams.remove(msg.content.lower())
+            completed_anagrams.add(msg.content.lower())
+        elif msg.content.lower() in completed_anagrams:
+            await ctx.send(msg.content + " (Already used)")
+        elif len(msg.content) != length:
+            await ctx.send("(Words must be " + str(length) + " letters long)")
+        else:
+            await ctx.send(msg.content + " (Not in vocabulary)")
+
+    timer_task.cancel()
+    sorted_anagrams = sorted(anagrams, key=lambda x: (-len(x), x))
+    sorted_completed = sorted(completed_anagrams, key=lambda x: (-len(x), x))
+    
+    results_embed = discord.Embed(
+        title="🏆 GAME RESULTS 🏆",
+        description=f"**Words found:** {len(sorted_completed)}/{len(sorted_anagrams) + len(sorted_completed)}",
+        color=0xffd700
+    )
+    
+    results_embed.add_field(
+        name=f"Found words ({len(sorted_completed)}):",
+        value=", ".join(sorted_completed) if sorted_completed else "None",
+        inline=False
+    )
+    
+    if len(sorted_anagrams) == 0:
+        results_embed.add_field(
+            name="🎉 Perfect Score! 🎉",
+            value="You got every combo! I'm so proud of you!",
+            inline=False
+        )
+    else:
+        results_embed.add_field(
+            name=f"Missed words ({len(sorted_anagrams)}):",
+            value=", ".join(sorted_anagrams) if sorted_anagrams else "None",
+            inline=False
+        )
     
     await ctx.send(embed=results_embed)
     
