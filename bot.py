@@ -54,12 +54,22 @@ async def help(ctx):
     embed.add_field(name="*combo 6", value="Plays combo challenge with a 6-letter word set", inline=False)
     embed.add_field(name="*combo 7", value="Plays combo challenge with a 7-letter word set", inline=False)
     embed.add_field(name="*reveal <word>", value="Shows all possible anagrams for a word (without playing)", inline=False)
-    embed.add_field(name="*letters", value="Shows the current game's original letters", inline=False)
+    embed.add_field(name="*letters / *l", value="Shows the current game's original letters", inline=False)
     embed.add_field(name="*quit", value="Quits the current game", inline=False)
     await ctx.send(embed=embed)
 
 @bot.command()
 async def letters(ctx):
+    if ctx.channel.id in current_game_info:
+        info = current_game_info[ctx.channel.id]
+        await ctx.send(f"🎯 **Current Game Info:**\n"
+                       f"**Scrambled:** `{info['scrambled']}`\n"
+                       f"**Time remaining:** {info['time_left']} seconds")
+    else:
+        await ctx.send("No active game in this channel. Start one with `*anagrams`!")
+
+@bot.command()
+async def l(ctx):
     if ctx.channel.id in current_game_info:
         info = current_game_info[ctx.channel.id]
         await ctx.send(f"🎯 **Current Game Info:**\n"
